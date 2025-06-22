@@ -27,6 +27,7 @@ pyozw.sqlite
 secrets.yaml
 tradfri.conf
 webostv.conf
+/hass-test/
 
 # Temporary files
 *.db-journal
