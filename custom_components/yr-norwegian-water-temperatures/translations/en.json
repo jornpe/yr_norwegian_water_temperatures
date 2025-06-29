@@ -1,0 +1,36 @@
+{
+  "config": {
+    "title": "Yr Norwegian Water Temperatures",
+    "abort": {
+      "already_configured": "Integration is already configured",
+      "reconfigure_successful": "Reconfiguration successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication, check your API key",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "Your API key for https://badetemperaturer.yr.no"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "Your API key for https://badetemperaturer.yr.no"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scan Interval (hours)"
+        },
+        "title": "Yr Norwegian Water Temperatures options"
+      }
+    }
+  }
+}

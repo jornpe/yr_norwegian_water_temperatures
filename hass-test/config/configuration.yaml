@@ -1,0 +1,27 @@
+## Basic Home Assistant configuration for testing
+#homeassistant:
+#  # Name of the location where Home Assistant is running
+#  name: "Test Environment"
+#  # Location required to calculate the time the sun rises and sets
+#  latitude: 59.9139  # Oslo coordinates
+#  longitude: 10.7522
+#  # Impacts weather/sunrise data (altitude above sea level in meters)
+#  elevation: 23
+#  # metric for Metric, imperial for Imperial
+#  unit_system: metric
+#  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+#  time_zone: "Europe/Oslo"
+#
+## Enables the frontend
+#frontend:
+#
+## Enables configuration UI
+#config:
+
+logger:
+  default: info
+  logs:
+    homeassistant.custom_components.yr-norwegian-water-temperatures: debug
+
+
+

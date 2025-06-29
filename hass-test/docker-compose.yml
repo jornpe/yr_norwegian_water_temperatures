@@ -1,0 +1,15 @@
+services:
+  homeassistant:
+    container_name: hass-test
+    image: homeassistant/home-assistant:stable
+    volumes:
+      # Mount the config directory for persistent Home Assistant configuration
+      - ./config:/config
+      # Mount your custom components folder into Home Assistant's custom_components directory
+      - ../custom_components:/config/custom_components
+    environment:
+      - TZ=Europe/Oslo  # Set timezone to Norway
+    ports:
+      - "8123:8123"  # Home Assistant web interface
+    restart: unless-stopped
+    privileged: true

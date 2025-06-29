@@ -1,0 +1,36 @@
+{
+  "config": {
+    "title": "Yr bade temperaturer",
+    "abort": {
+      "already_configured": "Integration er allerede konfigurert",
+      "reconfigure_successful": "Rekonfigurering vellykket"
+    },
+    "error": {
+      "cannot_connect": "Tilkobling mislyktes",
+      "invalid_auth": "Ugyldig autentisering, sjekk din API-nøkkel",
+      "unknown": "Uventet feil"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "Din API-nøkkel for https://badetemperaturer.yr.no"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "Din API-nøkkel for https://badetemperaturer.yr.no"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Skann intervall (timer)"
+        },
+        "title": "Yr bade temperaturer innstillinger"
+      }
+    }
+  }
+}
