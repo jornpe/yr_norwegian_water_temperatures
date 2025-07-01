@@ -1,4 +1,6 @@
 {
     "name": "Yr Norwegian Water Temperatures",
-    "render_readme": true
+    "content_in_root": false,
+    "render_readme": true,
+    "country": "NO"
 }
