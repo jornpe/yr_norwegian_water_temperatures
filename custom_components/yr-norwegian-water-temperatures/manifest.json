@@ -1,5 +1,5 @@
 {
-    "domain": "yr-norwegian-water-temperatures",
+    "domain": "yr_norwegian_water_temperatures",
     "name": "YR Norwegian Water Temperatures",
     "documentation": "https://github.com/jornpe/yr-norwegian-water-temperatures",
     "issue_tracker": "https://github.com/jornpe/yr-norwegian-water-temperatures/issues",
