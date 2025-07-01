@@ -85,10 +85,21 @@ For more detailed information about API keys, visit: [API for mottak av badetemp
 ### Finding Location Names
 
 To find specific location names or IDs:
+
+**Method 1: Using the integration**
 1. Enable "Get All Locations" temporarily to see all available sensors
 2. Note down the location names or IDs you want to monitor
-3. Reconfigure the integration with "Get All Locations" disabled
+3. Delete and add the integration again with "Get All Locations" disabled
 4. Enter your desired locations in the "Locations" field (e.g., "Oslo, Bergen, 123, Trondheim" - mixing names and IDs)
+
+**Method 2: Using Yr.no website**
+1. Visit [https://www.yr.no/nb/badetemperaturer](https://www.yr.no/nb/badetemperaturer)
+2. Browse and click on a location you're interested in
+3. From the URL, extract the location ID. For example:
+   - URL: `https://www.yr.no/nb/værvarsel/daglig-tabell/1-2289869/Norge/Vestfold/Holmestrand/Hagasand`
+   - Location ID: `1-2289869`
+   - Location name: `Hagasand`
+4. Use either the location name (e.g., "Hagasand") or the ID (e.g., "1-2289869") in your configuration
 
 ## Usage
 
