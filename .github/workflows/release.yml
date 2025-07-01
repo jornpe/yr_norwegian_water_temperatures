@@ -20,7 +20,9 @@ jobs:
 
       - name: "🏷️ Get version tag"
         id: set_var
-        run: echo "COMPONENT_VERSION=$(jq -r .version custom_components/*/manifest.json)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(jq -r .version custom_components/*/manifest.json)
+          echo "COMPONENT_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: "🏷️ Check if tag exists already"
         uses: mukunku/tag-exists-action@v1.6.0
