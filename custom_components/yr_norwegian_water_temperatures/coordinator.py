@@ -40,9 +40,11 @@ class ApiCoordinator(DataUpdateCoordinator):
                 return locations
             monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
             if monitored_locations:
+                # Convert monitored locations to lowercase for case-insensitive comparison
+                monitored_locations = [str(loc).lower() for loc in monitored_locations]
                 return [loc for loc in locations
-                        if loc.location_id in monitored_locations
-                        or loc.name in monitored_locations]
+                        if str(loc.location_id).lower() in monitored_locations
+                        or loc.name.lower() in monitored_locations]
 
         except PermissionError as e:
             _LOGGER.error("Invalid API key")
