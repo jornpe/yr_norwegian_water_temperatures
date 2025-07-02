@@ -1,5 +1,5 @@
 ---
-name: "Auto Release"
+name: "Release"
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
       - 'custom_components/*/manifest.json'
 
 jobs:
-  auto-release:
-    name: "Auto Release"
+  release:
+    name: "Release"
     runs-on: "ubuntu-latest"
     steps:
       - name: "✏️ Checkout code"

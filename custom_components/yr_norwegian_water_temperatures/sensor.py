@@ -57,7 +57,7 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
             name=self.data.name,
             manufacturer="Yr",
             model="Water Temperature Sensor",
-            configuration_url="https://www.yr.no"
+            configuration_url="https://www.yr.no/nb/badetemperaturer"
         )
 
     @property

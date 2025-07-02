@@ -1,4 +1,5 @@
-name: HACS Action
+name: HACS Validation
+# This workflow validates the custom component for HACS compatibility.
 
 on:
   push:
@@ -11,7 +12,7 @@ jobs:
     name: HACS Action
     runs-on: "ubuntu-latest"
     steps:
-      - name: HACS Action
+      - name: HACS Validation
         uses: "hacs/action@main"
         with:
           category: "integration"

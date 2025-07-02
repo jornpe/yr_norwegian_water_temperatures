@@ -7,6 +7,8 @@
 [![GitHub release](https://img.shields.io/github/release/jornpe/Yr-norwegian-water-temperatures-integration?include_prereleases=&sort=semver&color=blue)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/releases/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 [![issues - Yr-norwegian-water-temperatures-integration](https://img.shields.io/github/issues/jornpe/Yr-norwegian-water-temperatures-integration)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/issues)
+[![Build, Test, Release](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/actions/workflows/release.yml/badge.svg)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/actions/workflows/release.yml)
+[![HACS validation](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/actions/workflows/hacs.yml/badge.svg)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/actions/workflows/hacs.yml)
 
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration)  
