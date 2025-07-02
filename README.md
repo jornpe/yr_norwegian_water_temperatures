@@ -69,7 +69,7 @@ For more detailed information about API keys, visit: [API for mottak av badetemp
 3. Search for **"YR Norwegian Water Temperatures"**
 4. Enter your configuration:
    - **API Key**: Your API key from badetemperaturer.yr.no
-   - **Scan Interval**: How often to update data (minimum 1 hour, default 12 hours)
+   - **Scan Interval**: How often to update data in seconds (minimum 60 seconds, default 3600 seconds)
    - **Get All Locations**: Check this to monitor all available locations
    - **Locations**: If not getting all locations, enter specific location names or IDs (comma-separated)
 
@@ -78,7 +78,7 @@ For more detailed information about API keys, visit: [API for mottak av badetemp
 | Option | Description | Default | Required |
 |--------|-------------|---------|----------|
 | API Key | Your API key from badetemperaturer.yr.no | - | Yes |
-| Scan Interval | Update frequency in hours (min: 1, recommended: 12) | 12 hours | Yes |
+| Scan Interval | Update frequency in seconds (min: 60, recommended: 3600) | 3600 seconds | Yes |
 | Get All Locations | Monitor all available water temperature locations | No | No |
 | Locations | Specific locations to monitor (comma-separated names or IDs) | - | No* |
 

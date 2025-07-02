@@ -14,7 +14,7 @@
       "user": {
         "data": {
           "api_key": "Your API key for https://badetemperaturer.yr.no",
-          "scan_interval": "Scan Interval (hours)",
+          "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
           "locations": "Locations to monitor (comma-separated)"
         }
@@ -22,7 +22,7 @@
       "reconfigure": {
         "data": {
           "api_key": "Your API key for https://badetemperaturer.yr.no",
-          "scan_interval": "Scan Interval (hours)",
+          "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
           "locations": "Locations to monitor (comma-separated)"
         }
@@ -33,7 +33,7 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Scan Interval (hours)",
+          "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
           "locations": "Locations to monitor (comma-separated)"
         },

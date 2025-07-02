@@ -25,7 +25,7 @@ class ApiCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(hours=self.scan_interval),
+            update_interval=timedelta(seconds=self.scan_interval),
         )
         session = async_get_clientsession(hass)
         self.client = WaterTemperatures(self.api_key, session)
