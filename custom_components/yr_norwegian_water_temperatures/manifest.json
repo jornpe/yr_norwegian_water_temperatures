@@ -6,7 +6,7 @@
     "codeowners": ["@jornpe"],
     "config_flow": true,
     "iot_class": "cloud_polling",
-    "requirements": ["yrwatertemperatures==1.0.0"],
+    "requirements": ["yrwatertemperatures==1.0.1"],
     "version": "1.0.0",
     "translations": ["translations/en.json", "translations/nb.json"],
     "loggers": ["custom_components.yr_norwegian_water_temperatures"]

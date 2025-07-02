@@ -21,8 +21,6 @@ class ApiCoordinator(DataUpdateCoordinator):
         self.api_key = config_entry.data[CONF_API_KEY]
         self.scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-        _LOGGER.info(f"Config for this integration: {config_entry.data}") # TODO: Remove this line
-
         super().__init__(
             hass,
             _LOGGER,
@@ -35,7 +33,6 @@ class ApiCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from the API."""
-        _LOGGER.info("Fetching water temperatures from Yr API") # TODO: Remove this line
         try:
             # Fetch water temperatures only for the configured locations, or all if user has specified to get all locations
             locations = await self.client.async_get_all_water_temperatures()

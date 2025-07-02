@@ -70,10 +70,6 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
         """Update the state of the sensor with the latest valid temperature and return it."""
         sensor = next((s for s in self.coordinator.data if s.location_id == self.data.location_id), None)
 
-        # TODO: Remove this debug log after testing
-        if sensor and sensor.temperature is not None:
-            _LOGGER.debug(f"Updating temperature for {self.data.name} from {self._temperature} to {sensor.temperature}")
-
         self._temperature = sensor.temperature if sensor and sensor.temperature else self._temperature
         return self._temperature
 
