@@ -54,7 +54,7 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
         """Return device information for the sensor."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.entity_id)},
-            name=self.data.name,
+            name="Yr water temperature sensor",
             manufacturer="Yr",
             model="Water Temperature Sensor",
             configuration_url="https://www.yr.no/nb/badetemperaturer"
@@ -87,6 +87,10 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str | None:
         """Return a unique ID for the sensor."""
         return self._attr_unique_id
+    
+    @property
+    def should_poll(self):
+        return True
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
