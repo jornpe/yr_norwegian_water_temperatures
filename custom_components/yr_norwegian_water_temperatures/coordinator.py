@@ -45,6 +45,7 @@ class ApiCoordinator(DataUpdateCoordinator):
                 return [loc for loc in locations
                         if str(loc.location_id).lower() in monitored_locations
                         or loc.name.lower() in monitored_locations]
+            return []
 
         except PermissionError as e:
             _LOGGER.error("Invalid API key")
