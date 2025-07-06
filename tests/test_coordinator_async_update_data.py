@@ -6,7 +6,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from custom_components.yr_norwegian_water_temperatures.coordinator import ApiCoordinator
 from custom_components.yr_norwegian_water_temperatures.const import CONF_LOCATIONS, CONF_GET_ALL_LOCATIONS
 
-from tests.conftest import mock_location
+from tests.conftest import mock_location, mock_water_temperature_data
 
 class TestApiCoordinatorAsyncUpdateData:
     """Test the _async_update_data function in ApiCoordinator."""
@@ -22,24 +22,21 @@ class TestApiCoordinatorAsyncUpdateData:
             coordinator.config_entry = mock_config_entry
             return coordinator
 
+
     @pytest.mark.asyncio
     async def test_get_all_locations_when_configured(self, coordinator):
         """Test that all locations are returned when get_all_locations is True."""
         # Setup
-        mock_locations = [
-            mock_location("1", "Oslo"),
-            mock_location("2", "Bergen"),
-            mock_location("3", "Trondheim")
-        ]
-        coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
 
         # Execute
         result = await coordinator._async_update_data()
 
         # Assert
-        assert result == mock_locations
-        assert len(result) == 3
+        assert result == mock_water_temperature_data()
+        assert len(result) == len(mock_water_temperature_data())
+
 
     @pytest.mark.asyncio
     async def test_filter_locations_by_id_case_insensitive(self, coordinator):
@@ -56,13 +53,13 @@ class TestApiCoordinatorAsyncUpdateData:
         # Configure with lowercase location IDs
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
-            CONF_LOCATIONS: ["loc1", "loc3"]  # lowercase in config
+            CONF_LOCATIONS: "loc1, loc3"  # lowercase in config
         }
 
         # Execute
         result = await coordinator._async_update_data()
 
-        # Assert - should match LOC1 and Loc3 despite case differences
+        # Assert - should have 2 locations matching "loc1" and "loc3"
         assert len(result) == 2
         location_ids = [loc.location_id for loc in result]
         assert "LOC1" in location_ids
@@ -70,97 +67,75 @@ class TestApiCoordinatorAsyncUpdateData:
         assert "loc2" not in location_ids
         assert "4" not in location_ids
 
+
     @pytest.mark.asyncio
     async def test_filter_locations_by_name_case_insensitive(self, coordinator):
         """Test that locations are filtered by name with case-insensitive matching."""
         # Setup - create locations with mixed case names
-        mock_locations = [
-            mock_location("1", "OSLO"),
-            mock_location("2", "bergen"),
-            mock_location("3", "Trondheim"),
-            mock_location("4", "stavanger")
-        ]
-        coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
+
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         
         # Configure with lowercase location names
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
-            CONF_LOCATIONS: ["oslo", "trondheim"]  # lowercase in config
+            CONF_LOCATIONS: 'løvøya'  # lowercase in config
         }
 
         # Execute
         result = await coordinator._async_update_data()
 
-        # Assert - should match OSLO and Trondheim despite case differences
-        assert len(result) == 2
+        # Assert - should have 1 location matching "Løvøya"
+        assert len(result) == 1
         location_names = [loc.name for loc in result]
-        assert "OSLO" in location_names
-        assert "Trondheim" in location_names
-        assert "bergen" not in location_names
-        assert "stavanger" not in location_names
+        assert "Løvøya" in location_names
+
 
     @pytest.mark.asyncio
-    async def test_filter_locations_mixed_id_and_name(self, coordinator):
-        """Test filtering with both IDs and names in the configuration."""
-        # Setup
-        mock_locations = [
-            mock_location("BEACH1", "Copacabana"),
-            mock_location("2", "OSLO"),
-            mock_location("harbor3", "Bergen Port"),
-            mock_location("4", "stavanger")
-        ]
-        coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
-        
-        # Configure with mix of IDs and names (all lowercase)
+    async def test_filter_locations_by_name_and_id(self, coordinator):
+        """Test that locations are filtered by name with case-insensitive matching."""
+        # Setup - create locations with mixed case names
+
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
+
+        # Configure with lowercase location names
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
-            CONF_LOCATIONS: ["beach1", "oslo", "harbor3"]  # mix of ID and name
+            CONF_LOCATIONS: 'løvøya, 11-17685, Nordre Feste'
         }
 
         # Execute
         result = await coordinator._async_update_data()
 
-        # Assert
+        # Assert - should have 3 locations matching "Løvøya", "Nordre Jarlsberg Brygge" and "Nordre Feste"
         assert len(result) == 3
-        # Should match by ID: BEACH1, harbor3 and by name: OSLO
-        result_ids = [loc.location_id for loc in result]
-        result_names = [loc.name for loc in result]
-        
-        assert "BEACH1" in result_ids  # matched by ID
-        assert "2" in result_ids       # matched by name (OSLO)
-        assert "harbor3" in result_ids # matched by ID
-        assert "OSLO" in result_names
-        assert "4" not in result_ids   # stavanger not in config
+        location_names = [loc.name for loc in result]
+        assert "Løvøya" in location_names
+        assert "Nordre Jarlsberg Brygge" in location_names
+        assert "Nordre Feste" in location_names
+
 
     @pytest.mark.asyncio
     async def test_empty_locations_config_returns_empty_list(self, coordinator):
         """Test that empty locations configuration returns empty list (current behavior - might also be a bug)."""
         # Setup
-        mock_locations = [
-            mock_location("1", "Oslo"),
-            mock_location("2", "Bergen")
-        ]
-        coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
-            CONF_LOCATIONS: []  # empty list
+            CONF_LOCATIONS: ''  # empty list
         }
 
         # Execute
         result = await coordinator._async_update_data()
 
-        # Assert - Empty list should return empty list (this might be correct behavior)
+        # Assert - should return empty list
         assert result == []
+
 
     @pytest.mark.asyncio
     async def test_no_locations_config_returns_none(self, coordinator):
         """Test that missing locations configuration returns None (current behavior - this is the bug!)."""
         # Setup
-        mock_locations = [
-            mock_location("1", "Oslo"),
-            mock_location("2", "Bergen")
-        ]
-        coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False
             # CONF_LOCATIONS not set
@@ -169,8 +144,9 @@ class TestApiCoordinatorAsyncUpdateData:
         # Execute
         result = await coordinator._async_update_data()
 
-        # Assert - This demonstrates the bug: it returns None instead of empty list or all locations
+        # Assert - should return empty list
         assert result == []
+
 
     @pytest.mark.asyncio
     async def test_api_error_raises_update_failed(self, coordinator):
@@ -182,8 +158,11 @@ class TestApiCoordinatorAsyncUpdateData:
         # Execute & Assert
         with pytest.raises(UpdateFailed) as exc_info:
             await coordinator._async_update_data()
-        
+
+        # Asser - should raise UpdateFailed with the correct message
+        assert isinstance(exc_info.value, UpdateFailed)
         assert "Error fetching data: API Error" in str(exc_info.value)
+
 
     @pytest.mark.asyncio
     async def test_permission_error_raises_update_failed(self, coordinator):
