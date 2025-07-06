@@ -20,8 +20,6 @@
 
 logger:
   default: info
-  logs:
-    homeassistant.custom_components.yr-norwegian-water-temperatures: debug
 
 
 

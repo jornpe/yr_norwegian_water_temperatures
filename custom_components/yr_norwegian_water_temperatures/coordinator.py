@@ -36,16 +36,19 @@ class ApiCoordinator(DataUpdateCoordinator):
         try:
             # Fetch water temperatures only for the configured locations, or all if user has specified to get all locations
             locations = await self.client.async_get_all_water_temperatures()
+            monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
             if self.config_entry.options.get(CONF_GET_ALL_LOCATIONS, False):
                 return locations
-            monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
-            if monitored_locations:
-                # Convert monitored locations to lowercase for case-insensitive comparison
-                monitored_locations = [str(loc).lower() for loc in monitored_locations]
-                return [loc for loc in locations
-                        if str(loc.location_id).lower() in monitored_locations
-                        or loc.name.lower() in monitored_locations]
-            return []
+            if not locations or not monitored_locations:
+                _LOGGER.warning("No locations found or no monitored locations configured.")
+                return []
+
+            # Convert monitored locations to lowercase list for case-insensitive comparison
+            monitored_locations_list = [str(loc).strip().lower() for loc in monitored_locations.split(',') if loc.strip()]
+            # Filter locations by ID or name, case-insensitive
+            return [loc for loc in locations
+                    if str(loc.location_id).lower() in monitored_locations_list
+                    or loc.name.lower() in monitored_locations_list]
 
         except PermissionError as e:
             _LOGGER.error("Invalid API key")

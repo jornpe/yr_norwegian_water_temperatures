@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from __future__ import annotations
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +24,7 @@ PLATFORMS = [Platform.SENSOR]
 class RuntimeData:
     """Class to hold runtimedata"""
     coordinator: DataUpdateCoordinator
+    remove_listener: Callable[[], None] | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -34,8 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # This raises ConfigEntryNotReady if it fails
     await coordinator.async_config_entry_first_refresh()
 
-    # Add coordinator to runtimedata to make it available
-    # from the rest of the integration
+    # Add coordinator to runtime data to make it available
+    # for the rest of the integration
     config_entry.runtime_data = RuntimeData(coordinator)
 
     # Register the update listener to handle updates to the config entry
@@ -49,6 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entries"""
+    # Remove the coordinator listener
+    if entry.runtime_data and entry.runtime_data.remove_listener:
+        entry.runtime_data.remove_listener()
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return unload_ok
 
