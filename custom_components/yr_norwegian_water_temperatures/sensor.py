@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.util import dt
 
 from yrwatertemperatures import WaterTemperatureData
 
@@ -127,5 +128,5 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
             "municipality": self.data.municipality,
             "source": self.data.source,
             "last_measurement_time": self.data.time.isoformat(),
-            "hass_sensor_update_time": datetime.now().isoformat()
+            "hass_sensor_update_time": dt.now()
         }
