@@ -27,6 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
     coordinator = config_entry.runtime_data.coordinator
 
+    if not coordinator.data:
+        _LOGGER.warning("No water temperature data available. Ensure the API is configured correctly.")
+        return
+
     sensors = [
         WaterTemperatureSensor(coordinator, data)
         for data in coordinator.data

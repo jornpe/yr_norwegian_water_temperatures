@@ -11,8 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, STORAGE_KEY, STORAGE_VERSION
 from .coordinator import ApiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entries"""
+    # Clear data from storage
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    await store.async_save({})
+
     # Remove the coordinator listener
     if entry.runtime_data and entry.runtime_data.remove_listener:
         entry.runtime_data.remove_listener()
