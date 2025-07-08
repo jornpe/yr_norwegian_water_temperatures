@@ -57,6 +57,18 @@ def mock_location(
         source=source
     )
 
+def load_test_data() -> list[WaterTemperatureData]:
+    """Load test data from testdata.json"""
+    import json
+    from pathlib import Path
+
+    test_data_path = Path(__file__).parent / "testdata.json"
+    with open(test_data_path, "r", encoding="utf-8") as file:
+        data = json.load(file)
+
+    return data
+
+
 def mock_water_temperature_data() -> list[WaterTemperatureData]:
     """Create a list of mock WaterTemperatureData instances with real Norwegian locations."""
     return [
@@ -75,7 +87,7 @@ def mock_water_temperature_data() -> list[WaterTemperatureData]:
         WaterTemperatureData(
             location_id="1-46482",
             name="Løvøya",
-            temperature=17.7,
+            temperature=17,
             latitude=59.4482,
             longitude=10.445,
             elevation=76,

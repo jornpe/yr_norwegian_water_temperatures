@@ -2,11 +2,10 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
 from custom_components.yr_norwegian_water_temperatures.coordinator import ApiCoordinator
 from custom_components.yr_norwegian_water_temperatures.const import CONF_LOCATIONS, CONF_GET_ALL_LOCATIONS
-
-from tests.conftest import mock_location, mock_water_temperature_data
+from tests.conftest import mock_location, mock_water_temperature_data, load_test_data
+from yrwatertemperatures import WaterTemperatureData
 
 class TestApiCoordinatorAsyncUpdateData:
     """Test the _async_update_data function in ApiCoordinator."""
@@ -20,13 +19,15 @@ class TestApiCoordinatorAsyncUpdateData:
             coordinator = ApiCoordinator(mock_hass, mock_config_entry)
             coordinator.client = AsyncMock()
             coordinator.config_entry = mock_config_entry
+            coordinator.store = AsyncMock()
             return coordinator
 
 
     @pytest.mark.asyncio
-    async def test_get_all_locations_when_configured(self, coordinator):
+    async def test_get_all_api_locations_when_configured(self, coordinator):
         """Test that all locations are returned when get_all_locations is True."""
         # Setup
+        coordinator.store.async_load.return_value = []
         coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
 
@@ -39,6 +40,21 @@ class TestApiCoordinatorAsyncUpdateData:
 
 
     @pytest.mark.asyncio
+    async def test_get_all_store_locations_when_configured(self, coordinator):
+        """Test that all locations are returned when get_all_locations is True."""
+        # Setup
+        coordinator.store.async_load.return_value = load_test_data()
+        coordinator.client.async_get_all_water_temperatures.return_value = []
+        coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
+
+        # Execute
+        result = await coordinator._async_update_data()
+
+        # Assert
+        assert len(result) == len(load_test_data())
+
+
+    @pytest.mark.asyncio
     async def test_filter_locations_by_id_case_insensitive(self, coordinator):
         """Test that locations are filtered by ID with case-insensitive matching."""
         # Setup - create locations with mixed case IDs
@@ -48,6 +64,7 @@ class TestApiCoordinatorAsyncUpdateData:
             mock_location("Loc3", "Trondheim"),
             mock_location("4", "Stavanger")
         ]
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.return_value = mock_locations
         
         # Configure with lowercase location IDs
@@ -72,7 +89,7 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_filter_locations_by_name_case_insensitive(self, coordinator):
         """Test that locations are filtered by name with case-insensitive matching."""
         # Setup - create locations with mixed case names
-
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         
         # Configure with lowercase location names
@@ -94,7 +111,7 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_filter_locations_by_name_and_id(self, coordinator):
         """Test that locations are filtered by name with case-insensitive matching."""
         # Setup - create locations with mixed case names
-
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
 
         # Configure with lowercase location names
@@ -118,6 +135,7 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_empty_locations_config_returns_empty_list(self, coordinator):
         """Test that empty locations configuration returns empty list (current behavior - might also be a bug)."""
         # Setup
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
@@ -135,6 +153,7 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_no_locations_config_returns_none(self, coordinator):
         """Test that missing locations configuration returns None (current behavior - this is the bug!)."""
         # Setup
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False
@@ -152,6 +171,7 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_api_error_raises_update_failed(self, coordinator):
         """Test that API errors are properly handled and raise UpdateFailed."""
         # Setup
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.side_effect = Exception("API Error")
         coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
 
@@ -168,9 +188,67 @@ class TestApiCoordinatorAsyncUpdateData:
     async def test_permission_error_raises_update_failed(self, coordinator):
         """Test that permission errors (invalid API key) are properly handled."""
         # Setup
+        coordinator.store.async_load.return_value = load_test_data()
         coordinator.client.async_get_all_water_temperatures.side_effect = PermissionError("Invalid API key")
         coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
 
         # Execute & Assert
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
+
+
+    @pytest.mark.asyncio
+    async def test_loading_data_from_store(self, coordinator):
+        """Test that data is loaded from the store and returned correctly."""
+        # Setup
+        coordinator.store.async_load.return_value = load_test_data()
+        coordinator.client.async_get_all_water_temperatures.return_value = []
+        coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
+
+        # Execute
+        result = await coordinator._async_update_data()
+
+        # Assert
+        assert len(result) == 436
+
+    @pytest.mark.asyncio
+    async def test_loading_data_from_store_with_new_location_from_api(self, coordinator):
+        """Test that data is loaded from the store and returned correctly."""
+        # Setup
+        coordinator.store.async_load.return_value = load_test_data()
+        coordinator.client.async_get_all_water_temperatures.return_value = mock_water_temperature_data()
+        coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
+
+        # Execute
+        result = await coordinator._async_update_data()
+
+        # Assert - should return all locations from store plus new ones from API. The API returns 1 new location.
+        assert len(result) == 437
+
+    @pytest.mark.asyncio
+    async def test_updateing_store_data_with_api_check_updated_value_is_correct(self, coordinator):
+        """Test that data is loaded from the store and returned correctly."""
+        # Setup
+        coordinator.store.async_load.return_value = load_test_data()
+        coordinator.client.async_get_all_water_temperatures.return_value = [
+            WaterTemperatureData(
+                name="Løvøya",
+                location_id="11-17685",
+                latitude=59.1234,
+                longitude=10.1234,
+                elevation=10,
+                county="Oslo",
+                municipality="Oslo",
+                temperature=17.0,  # Updated temperature
+                time="2023-10-01T12:00:00+00:00",
+                source="Badevann.no"
+            )
+        ]
+        coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
+
+        # Execute
+        result = await coordinator._async_update_data()
+
+        # Assert - should return updated value for Løvøya
+        test_location: WaterTemperatureData = next(loc for loc in result if loc.name == "Løvøya")
+        assert test_location.temperature == 17.0
