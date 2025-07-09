@@ -1,9 +1,11 @@
 """Tests for the coordinator module, specifically the _async_update_data function."""
+from datetime import datetime, timedelta
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from custom_components.yr_norwegian_water_temperatures.coordinator import ApiCoordinator
-from custom_components.yr_norwegian_water_temperatures.const import CONF_LOCATIONS, CONF_GET_ALL_LOCATIONS
+from custom_components.yr_norwegian_water_temperatures.const import *
 from tests.conftest import mock_location, mock_water_temperature_data, load_test_data
 from yrwatertemperatures import WaterTemperatureData
 
@@ -226,29 +228,56 @@ class TestApiCoordinatorAsyncUpdateData:
         assert len(result) == 437
 
     @pytest.mark.asyncio
-    async def test_updateing_store_data_with_api_check_updated_value_is_correct(self, coordinator):
-        """Test that data is loaded from the store and returned correctly."""
+    async def test_cleanup_of_old_sensors(self, coordinator):
+        """Test that old sensors are cleaned up when cleanup is enabled."""
         # Setup
-        coordinator.store.async_load.return_value = load_test_data()
-        coordinator.client.async_get_all_water_temperatures.return_value = [
-            WaterTemperatureData(
-                name="Løvøya",
-                location_id="11-17685",
-                latitude=59.1234,
-                longitude=10.1234,
-                elevation=10,
-                county="Oslo",
-                municipality="Oslo",
-                temperature=17.0,  # Updated temperature
-                time="2023-10-01T12:00:00+00:00",
-                source="Badevann.no"
-            )
-        ]
-        coordinator.config_entry.options = {CONF_GET_ALL_LOCATIONS: True}
+        old_date = datetime.now() - timedelta(days=2)  # Make it 2 days old to ensure cleanup
 
-        # Execute
-        result = await coordinator._async_update_data()
+        with patch('custom_components.yr_norwegian_water_temperatures.coordinator.dt') as mock_dt:
+            # Mock dt.now().astimezone() to return a fixed datetime
+            mock_now = datetime.now()
+            mock_dt.now.return_value.astimezone.return_value = mock_now
 
-        # Assert - should return updated value for Løvøya
-        test_location: WaterTemperatureData = next(loc for loc in result if loc.name == "Løvøya")
-        assert test_location.temperature == 17.0
+            # Mock the cleanup_old_entities method to avoid entity registry interactions
+            with patch.object(coordinator, 'cleanup_old_entities', new_callable=AsyncMock) as mock_cleanup:
+                coordinator.store.async_load.return_value = []
+                coordinator.client.async_get_all_water_temperatures.return_value = [
+                    WaterTemperatureData(
+                        name="Løvøya",
+                        location_id="11-17685",
+                        latitude=59.1234,
+                        longitude=10.1234,
+                        elevation=10,
+                        county="Oslo",
+                        municipality="Oslo",
+                        temperature=17.0,
+                        time=old_date,  # Use datetime object that is 2 days old
+                        source="Badevann.no"
+                    ),
+                    WaterTemperatureData(
+                        name="Nordre Jarlsberg Brygge",
+                        location_id="11-17686",
+                        latitude=59.1235,
+                        longitude=10.1235,
+                        elevation=10,
+                        county="Oslo",
+                        municipality="Oslo",
+                        temperature=18.0,
+                        time=datetime.now(),  # Current time for this location
+                        source="Badevann.no"
+                    )
+                ]
+                coordinator.config_entry.options = {
+                    CONF_GET_ALL_LOCATIONS: True,
+                    CONF_ENABLE_CLEANUP: True,
+                    CONF_CLEANUP_DAYS: 1  # Clean up locations older than 1 day
+                }
+
+                # Execute
+                result = await coordinator._async_update_data()
+
+                # Assert - should return no locations as the old one is cleaned up
+                assert len(result) == 1
+
+                # Verify that cleanup_old_entities was called with the correct location ID
+                mock_cleanup.assert_called_once_with(['11-17685'])
