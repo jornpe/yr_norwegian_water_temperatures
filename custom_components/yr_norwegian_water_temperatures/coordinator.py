@@ -6,10 +6,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt
 
 from yrwatertemperatures import WaterTemperatures, WaterTemperatureData
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, CONF_LOCATIONS, CONF_GET_ALL_LOCATIONS, STORAGE_KEY, STORAGE_VERSION
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    CONF_LOCATIONS,
+    CONF_GET_ALL_LOCATIONS,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+    CONF_ENABLE_CLEANUP,
+    CONF_CLEANUP_DAYS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +47,18 @@ class ApiCoordinator(DataUpdateCoordinator):
             STORAGE_VERSION,
             STORAGE_KEY)
 
+    async def cleanup_old_entities(self, location_ids: list[str]) -> None:
+        """Remove entities that are no longer in the monitored locations."""
+        entity_registry = er.async_get(self.hass)
+
+        # Get all entity IDs for the domain
+        entities = er.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
+
+        for entity in entities:
+            if entity.unique_id in location_ids:
+                entity_registry.async_remove(entity.entity_id)
+                _LOGGER.debug(f"Removed entity: {entity.entity_id}")
+
 
     async def _async_update_data(self):
         """Fetch data from the API."""
@@ -60,12 +83,25 @@ class ApiCoordinator(DataUpdateCoordinator):
 
             self.data = updated_locations
 
+            monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
+            get_all_locations = self.config_entry.options.get(CONF_GET_ALL_LOCATIONS, False)
+
+            # Clean up old locations if automatic cleanup is enabled
+            if self.config_entry.options.get(CONF_ENABLE_CLEANUP, False):
+                cleanup_days = self.config_entry.options.get(CONF_CLEANUP_DAYS, 365)
+                cutoff_date = dt.now().astimezone() - timedelta(days=cleanup_days)
+                to_remove = [loc for loc in self.data if loc.time < cutoff_date]
+                self.data = [loc for loc in self.data if loc not in to_remove]
+                if to_remove:
+                    _LOGGER.debug(f"Removing {len(to_remove)} old locations not updated since {cutoff_date}")
+                    await self.cleanup_old_entities([loc.location_id for loc in to_remove])
+                else:
+                    _LOGGER.debug("No old locations found to remove")
+
+
             # Save the updated data to storage
             _LOGGER.debug(f"Saving {len(self.data)} new locations to storage")
             await self.store.async_save(self.data)
-
-            monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
-            get_all_locations = self.config_entry.options.get(CONF_GET_ALL_LOCATIONS, False)
 
             # Case: if user has specified to get all locations, return all
             if get_all_locations:

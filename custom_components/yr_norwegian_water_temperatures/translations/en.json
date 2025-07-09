@@ -16,7 +16,13 @@
           "api_key": "Your API key for https://badetemperaturer.yr.no",
           "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "locations": "Locations to monitor (comma-separated)",
+          "enable_cleanup": "Enable automatic cleanup",
+          "cleanup_days": "Days to keep inactive sensors"
+        },
+        "data_description": {
+          "enable_cleanup": "Enable automatic cleanup of sensors that have not been updated for a specified number of days.",
+          "cleanup_days": "The number of days to keep sensors that are no longer receiving updates."
         }
       },
       "reconfigure": {
@@ -24,7 +30,13 @@
           "api_key": "Your API key for https://badetemperaturer.yr.no",
           "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "locations": "Locations to monitor (comma-separated)",
+          "enable_cleanup": "Enable automatic cleanup",
+          "cleanup_days": "Days to keep inactive sensors"
+        },
+        "data_description": {
+          "enable_cleanup": "Enable automatic cleanup of sensors that have not been updated for a specified number of days.",
+          "cleanup_days": "The number of days to keep sensors that are no longer receiving updates."
         }
       }
     }
@@ -32,12 +44,19 @@
   "options": {
     "step": {
       "init": {
+        "title": "Yr Norwegian Water Temperatures options",
+        "description": "Configure the Yr Norwegian Water Temperatures integration.",
         "data": {
           "scan_interval": "Scan Interval (seconds)",
           "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "locations": "Locations to monitor (comma-separated)",
+          "enable_cleanup": "Automatic cleanup",
+          "cleanup_days": "Days to keep inactive sensors"
         },
-        "title": "Yr Norwegian Water Temperatures options"
+        "data_description": {
+          "enable_cleanup": "Enable automatic cleanup of sensors that have not been updated for a specified number of days.",
+          "cleanup_days": "The number of days to keep sensors that are no longer receiving updates."
+        }
       }
     }
   }
