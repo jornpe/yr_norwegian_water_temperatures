@@ -56,7 +56,7 @@ class ApiCoordinator(DataUpdateCoordinator):
 
         for entity in entities:
             if entity.unique_id in location_ids:
-                entity_registry.async_remove(entity.entity_id)
+                await entity_registry.async_remove(entity.entity_id)
                 _LOGGER.debug(f"Removed entity: {entity.entity_id}")
 
 
@@ -83,47 +83,40 @@ class ApiCoordinator(DataUpdateCoordinator):
 
             self.data = updated_locations
 
-            monitored_locations = self.config_entry.options.get(CONF_LOCATIONS, None)
             get_all_locations = self.config_entry.options.get(CONF_GET_ALL_LOCATIONS, False)
+            monitored_locations_config = self.config_entry.options.get(CONF_LOCATIONS, None)
 
-            # Clean up old locations if automatic cleanup is enabled
+            # User has not specified to get all locations and no monitored locations configured, returning an empty list and logging a warning
+            if not monitored_locations_config and not get_all_locations:
+                _LOGGER.warning("No monitored locations configured and not set to get all locations.")
+                return []
+
+            # Filter self.data to only include monitored locations if not getting all locations
+            if not get_all_locations:
+                if monitored_locations_config:
+                    monitored_locations_list = [str(loc).strip().lower() for loc in
+                                                monitored_locations_config.split(',') if loc.strip()]
+                    monitored_data = [loc for loc in self.data
+                                      if str(loc.location_id).lower() in monitored_locations_list
+                                      or loc.name.lower() in monitored_locations_list]
+
+                    # Remove unmonitored entities
+                    unmonitored_ids = [loc.location_id for loc in self.data if loc not in monitored_data]
+                    if unmonitored_ids:
+                        await self.cleanup_old_entities(unmonitored_ids)
+
+                    self.data = monitored_data
+
+            # Clean up old entities if automatic cleanup is enabled
             if self.config_entry.options.get(CONF_ENABLE_CLEANUP, False):
                 cleanup_days = self.config_entry.options.get(CONF_CLEANUP_DAYS, 365)
                 cutoff_date = dt.now().astimezone() - timedelta(days=cleanup_days)
                 to_remove = [loc for loc in self.data if loc.time < cutoff_date]
-                self.data = [loc for loc in self.data if loc not in to_remove]
                 if to_remove:
-                    _LOGGER.debug(f"Removing {len(to_remove)} old locations not updated since {cutoff_date}")
                     await self.cleanup_old_entities([loc.location_id for loc in to_remove])
-                else:
-                    _LOGGER.debug("No old locations found to remove")
+                    self.data = [loc for loc in self.data if loc not in to_remove]
 
-
-            # Save the updated data to storage
-            _LOGGER.debug(f"Saving {len(self.data)} new locations to storage")
-            await self.store.async_save(self.data)
-
-            # Case: if user has specified to get all locations, return all
-            if get_all_locations:
-                _LOGGER.debug("Returning all locations because of configuration option")
-                return self.data
-
-            # Case: if no locations stored or user does not monitor any locations
-            # and has not specified to get all, return empty list
-            if not self.data or not monitored_locations:
-                _LOGGER.warning("No locations found or no monitored locations configured.")
-                return []
-
-            # Case: if user has specified monitored locations, filter the data
-            # Convert monitored locations to lowercase list for case-insensitive comparison
-            monitored_locations_list = [str(loc).strip().lower() for loc in monitored_locations.split(',') if loc.strip()]
-            # Filter locations by ID or name, case-insensitive
-            locations = [loc for loc in self.data
-                    if str(loc.location_id).lower() in monitored_locations_list
-                    or loc.name.lower() in monitored_locations_list]
-
-            _LOGGER.debug(f"Returning {len(locations)} monitored locations")
-            return locations
+            return self.data
 
 
         except PermissionError as e:

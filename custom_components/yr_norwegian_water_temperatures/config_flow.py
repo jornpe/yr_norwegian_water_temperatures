@@ -210,20 +210,20 @@ class YrWaterTemperaturesOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize the options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Handle the options step."""
         if user_input is not None:
             # Process the user input and update options
-            options = self.config_entry.options | user_input
+            options = self._config_entry.options | user_input
             _LOGGER.info(f"Updating options for {DOMAIN}: {options}")
             return self.async_create_entry(title="", data=options)
 
 
         return self.async_show_form(
             step_id="init",
-            data_schema=get_options_data_schema(self.config_entry)
+            data_schema=get_options_data_schema(self._config_entry)
         )
 
 
