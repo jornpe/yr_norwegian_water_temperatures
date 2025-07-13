@@ -56,7 +56,7 @@ class ApiCoordinator(DataUpdateCoordinator):
 
         for entity in entities:
             if entity.unique_id in location_ids:
-                await entity_registry.async_remove(entity.entity_id)
+                entity_registry.async_remove(entity.entity_id)
                 _LOGGER.debug(f"Removed entity: {entity.entity_id}")
 
 
