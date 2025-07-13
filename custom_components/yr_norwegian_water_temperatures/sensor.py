@@ -131,6 +131,5 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
             "county": self.data.county,
             "municipality": self.data.municipality,
             "source": self.data.source,
-            "last_measurement_time": self.data.time.isoformat(),
-            "hass_sensor_update_time": dt.now()
+            "time": self.data.time.isoformat()
         }
