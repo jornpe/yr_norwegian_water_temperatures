@@ -12,19 +12,35 @@
     },
     "step": {
       "user": {
+        "description": "Konfigurer YR badetemperatur integrasjonen.\n\nFå din API-nøkkel fra https://badetemperaturer.yr.no\n\nDu kan overvåke alle steder eller spesifisere bestemte. Hvis du overvåker alle steder, anbefales automatisk opprydding for å unngå akkumulering av hundrevis av inaktive sensorer.",
         "data": {
-          "api_key": "Din API-nøkkel for https://badetemperaturer.yr.no",
-          "scan_interval": "Skann intervall (sekunder)",
-          "get_all_locations": "Hent alle steder (ignorer steds liste under)",
-          "locations": "Steder å overvåke (kommaseparert)"
+          "api_key": "API-nøkkel",
+          "scan_interval": "Oppdateringsintervall (sekunder)",
+          "get_all_locations": "Overvåk alle tilgjengelige steder",
+          "locations": "Spesifikke steder å overvåke (kommaseparerte navn eller ID-er)",
+          "enable_cleanup": "Aktiver automatisk opprydding av inaktive sensorer",
+          "cleanup_days": "Dager å beholde inaktive sensorer"
+        },
+        "data_description": {
+          "scan_interval": "Minimum 60 sekunder",
+          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 dag"
         }
       },
       "reconfigure": {
+        "description": "Oppdater din YR badetemperatur konfigurasjon.\n\nEndre din API-nøkkel og andre innstillinger etter behov.",
         "data": {
-          "api_key": "Din API-nøkkel for https://badetemperaturer.yr.no",
-          "scan_interval": "Skann intervall (sekunder)",
-          "get_all_locations": "Hent alle steder (ignorer steds liste under)",
-          "locations": "Steder å overvåke (kommaseparert)"
+          "api_key": "API-nøkkel",
+          "scan_interval": "Oppdateringsintervall (sekunder)",
+          "get_all_locations": "Overvåk alle tilgjengelige steder",
+          "locations": "Spesifikke steder å overvåke (kommaseparerte navn eller ID-er)",
+          "enable_cleanup": "Aktiver automatisk opprydding av inaktive sensorer",
+          "cleanup_days": "Dager å beholde inaktive sensorer"
+        },
+        "data_description": {
+          "scan_interval": "Minimum 60 sekunder",
+          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 dag"
         }
       }
     }
@@ -32,12 +48,19 @@
   "options": {
     "step": {
       "init": {
+        "description": "Du kan overvåke alle steder eller spesifisere bestemte. Når du overvåker alle steder, anbefales automatisk opprydding for å unngå akkumulering av hundrevis av inaktive sensorer.",
         "data": {
-          "scan_interval": "Skann intervall (sekunder)",
-          "get_all_locations": "Hent alle steder (ignorer steds liste)",
-          "locations": "Steder å overvåke (kommaseparert)"
+          "scan_interval": "Oppdateringsintervall (sekunder)",
+          "get_all_locations": "Overvåk alle tilgjengelige steder",
+          "locations": "Spesifikke steder å overvåke (kommaseparerte navn eller ID-er)",
+          "enable_cleanup": "Aktiver automatisk opprydding av inaktive sensorer",
+          "cleanup_days": "Dager å beholde inaktive sensorer"
         },
-        "title": "Yr bade temperaturer innstillinger"
+        "data_description": {
+          "scan_interval": "Minimum 60 sekunder",
+          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 dag"
+        }
       }
     }
   }

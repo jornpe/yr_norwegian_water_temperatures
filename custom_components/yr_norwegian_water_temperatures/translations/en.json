@@ -12,19 +12,35 @@
     },
     "step": {
       "user": {
+        "description": "Configure the YR Norwegian Water Temperatures integration.\n\nGet your API key from https://badetemperaturer.yr.no\n\nYou can monitor all locations or specify particular ones. If monitoring all locations, automatic cleanup is recommended to prevent accumulating hundreds of inactive sensors.",
         "data": {
-          "api_key": "Your API key for https://badetemperaturer.yr.no",
-          "scan_interval": "Scan Interval (seconds)",
-          "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "api_key": "API Key",
+          "scan_interval": "Update interval (seconds)",
+          "get_all_locations": "Monitor all available locations",
+          "locations": "Specific locations to monitor (comma-separated names or IDs)",
+          "enable_cleanup": "Enable automatic cleanup of inactive sensors",
+          "cleanup_days": "Days to keep inactive sensors"
+        },
+        "data_description": {
+          "scan_interval": "Minimum 60 seconds",
+          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 day"
         }
       },
       "reconfigure": {
+        "description": "Update your YR Norwegian Water Temperatures configuration.\n\nModify your API key and other settings as needed.",
         "data": {
-          "api_key": "Your API key for https://badetemperaturer.yr.no",
-          "scan_interval": "Scan Interval (seconds)",
-          "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "api_key": "API Key",
+          "scan_interval": "Update interval (seconds)",
+          "get_all_locations": "Monitor all available locations",
+          "locations": "Specific locations to monitor (comma-separated names or IDs)",
+          "enable_cleanup": "Enable automatic cleanup of inactive sensors",
+          "cleanup_days": "Days to keep inactive sensors"
+        },
+        "data_description": {
+          "scan_interval": "Minimum 60 seconds",
+          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 day"
         }
       }
     }
@@ -32,12 +48,19 @@
   "options": {
     "step": {
       "init": {
+        "description": "You can monitor all locations or specify particular ones. When monitoring all locations, automatic cleanup is recommended to prevent accumulating hundreds of inactive sensors.",
         "data": {
-          "scan_interval": "Scan Interval (seconds)",
-          "get_all_locations": "Get all locations (ignore locations list under)",
-          "locations": "Locations to monitor (comma-separated)"
+          "scan_interval": "Update interval (seconds)",
+          "get_all_locations": "Monitor all available locations",
+          "locations": "Specific locations to monitor (comma-separated names or IDs)",
+          "enable_cleanup": "Enable automatic cleanup of inactive sensors",
+          "cleanup_days": "Days to keep inactive sensors"
         },
-        "title": "Yr Norwegian Water Temperatures options"
+        "data_description": {
+          "scan_interval": "Minimum 60 seconds",
+          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "cleanup_days": "Minimum 1 day"
+        }
       }
     }
   }

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow, ConfigEntry
+from homeassistant.config_entries import ConfigFlow, OptionsFlow, ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -14,23 +14,84 @@ from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 
 from yrwatertemperatures import WaterTemperatures
 
-from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL, CONF_LOCATIONS, CONF_GET_ALL_LOCATIONS
+from .const import (
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+    CONF_LOCATIONS,
+    CONF_GET_ALL_LOCATIONS,
+    CONF_ENABLE_CLEANUP,
+    CONF_CLEANUP_DAYS,
+    DEFAULT_ENABLE_CLEANUP,
+    DEFAULT_CLEANUP_DAYS,
+    DEFAULT_GET_ALL_LOCATIONS
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_user_data_schema(api_key_default="", locations_default="", scan_interval_default=DEFAULT_SCAN_INTERVAL, get_all_locations_default=False) -> vol.Schema:
+def get_options_data_schema(config_entry: ConfigEntry | None) -> vol.Schema:
+    """Return the options data schema for the integration."""
+    options = config_entry.options if config_entry else {}
     return vol.Schema(
         {
-            vol.Required(CONF_API_KEY, default=api_key_default): str,
             vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=scan_interval_default):
-                    (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))
-            ),
-            vol.Optional(CONF_GET_ALL_LOCATIONS, default=get_all_locations_default): bool,
-            vol.Optional(CONF_LOCATIONS, default=locations_default): str,
+                CONF_SCAN_INTERVAL,
+                default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
+            vol.Optional(
+                CONF_GET_ALL_LOCATIONS,
+                default=options.get(
+                    CONF_GET_ALL_LOCATIONS, DEFAULT_GET_ALL_LOCATIONS
+                ),
+            ): bool,
+            vol.Optional(
+                CONF_LOCATIONS, default=options.get(CONF_LOCATIONS, "")
+            ): str,
+            vol.Optional(
+                CONF_ENABLE_CLEANUP,
+                default=options.get(CONF_ENABLE_CLEANUP, DEFAULT_ENABLE_CLEANUP),
+            ): bool,
+            vol.Optional(
+                CONF_CLEANUP_DAYS,
+                default=options.get(CONF_CLEANUP_DAYS, DEFAULT_CLEANUP_DAYS),
+            ): vol.All(vol.Coerce(int), vol.Clamp(min=1)),
         }
     )
+
+
+def get_user_data_schema(config_entry: ConfigEntry | None) -> vol.Schema:
+    """Return the user data schema for the integration."""
+    api_key = config_entry.data.get(CONF_API_KEY, "") if config_entry and config_entry.data else ""
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_API_KEY, default=api_key): str,
+        }
+    )
+
+
+def split_user_input(user_input: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Split user input into data and options dictionaries."""
+    data_keys = set()
+    for key in get_user_data_schema(None).schema.keys():
+        if hasattr(key, 'schema'):
+            data_keys.add(key.schema)
+        else:
+            data_keys.add(str(key))
+
+    options_keys = set()
+    for key in get_options_data_schema(None).schema.keys():
+        if hasattr(key, 'schema'):
+            options_keys.add(key.schema)
+        else:
+            options_keys.add(str(key))
+
+    data = {key: user_input[key] for key in data_keys if key in user_input}
+    options = {key: user_input.get(key) for key in options_keys if key in user_input}
+
+    return data, options
+
 
 class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yr Norwegian Water Temperatures."""
@@ -64,12 +125,8 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(api_key)
                     self._abort_if_unique_id_configured()
 
-                    data = {CONF_API_KEY: user_input[CONF_API_KEY]}
-                    options = {
-                        CONF_LOCATIONS: user_input.get(CONF_LOCATIONS, ""),
-                        CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                        CONF_GET_ALL_LOCATIONS: user_input.get(CONF_GET_ALL_LOCATIONS, False)
-                    }
+                    data, options = split_user_input(user_input)
+                    _LOGGER.info(f"Creating {DOMAIN} config entry with data: {data}, options: {options}")
 
                     return self.async_create_entry(
                         title="YR Water Temperatures",
@@ -77,9 +134,14 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
                         options= options
                     )
 
+        # Get the options schema dictionary and merge it with the user schema
+        options_schema = get_options_data_schema(None).schema
+        user_schema = get_user_data_schema(None).schema
+        combined_schema = vol.Schema({**user_schema, **options_schema})
+
         return self.async_show_form(
             step_id="user",
-            data_schema=get_user_data_schema(),
+            data_schema=combined_schema,
             errors=errors
         )
 
@@ -105,24 +167,27 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     # If validation succeeds, create the config entry
                     _LOGGER.debug("API key validated successfully")
-                    data = {CONF_API_KEY: user_input[CONF_API_KEY]}
-                    options = {
-                        CONF_LOCATIONS: user_input.get(CONF_LOCATIONS, ""),
-                        CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                        CONF_GET_ALL_LOCATIONS: user_input.get(CONF_GET_ALL_LOCATIONS, False)
-                    }
+
+                    data, options = split_user_input(user_input)
+                    _LOGGER.info(f"Reconfiguring {DOMAIN} with data: {data}, options: {options}")
+
                     return self.async_update_reload_and_abort(
                         config_entry,
                         unique_id=config_entry.unique_id,
-                        data={**config_entry.data, **data},
-                        options = {**config_entry.options, **options},
+                        data=data,
+                        options = options,
                         reason="reconfigure_successful"
                     )
+        # Get the options schema dictionary and merge it with the user schema
+        options_schema = get_options_data_schema(config_entry).schema
+        user_schema = get_user_data_schema(config_entry).schema
+        combined_schema = vol.Schema({**user_schema, **options_schema})
 
         # Show the reconfiguration form
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=get_user_data_schema(config_entry.data.get(CONF_API_KEY, ""), config_entry.options.get(CONF_LOCATIONS, ""), config_entry.options.get(CONF_SCAN_INTERVAL))
+            data_schema=combined_schema,
+            errors=errors
         )
 
 
@@ -145,30 +210,20 @@ class YrWaterTemperaturesOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize the options flow."""
-        self.options = dict(config_entry.options)
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Handle the options step."""
         if user_input is not None:
             # Process the user input and update options
-            options = self.options | user_input
+            options = self._config_entry.options | user_input
+            _LOGGER.info(f"Updating options for {DOMAIN}: {options}")
             return self.async_create_entry(title="", data=options)
 
-        # Show the options form
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
-                vol.Optional(CONF_GET_ALL_LOCATIONS, default=self.options.get(CONF_GET_ALL_LOCATIONS, False)): bool,
-                vol.Optional(CONF_LOCATIONS, default=self.options.get(CONF_LOCATIONS, "")): str,
-            }
-        )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=data_schema
+            data_schema=get_options_data_schema(self._config_entry)
         )
 
 
