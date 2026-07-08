@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: "✏️ Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🐍 Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -38,7 +38,7 @@ jobs:
     needs: test
     steps:
       - name: "✏️ Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: 
           path: './'
 
@@ -49,7 +49,7 @@ jobs:
           echo "COMPONENT_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: "🏷️ Check if tag exists already"
-        uses: mukunku/tag-exists-action@v1.6.0
+        uses: mukunku/tag-exists-action@v1.7.0
         id: "check_tag"
         with: 
           tag: "v${{ env.COMPONENT_VERSION }}"
