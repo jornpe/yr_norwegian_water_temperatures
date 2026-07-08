@@ -5,9 +5,10 @@
     "issue_tracker": "https://github.com/jornpe/yr-norwegian-water-temperatures/issues",
     "codeowners": ["@jornpe"],
     "config_flow": true,
+    "homeassistant": "2025.8.0",
     "iot_class": "cloud_polling",
-    "requirements": ["yrwatertemperatures==1.0.0"],
-    "version": "1.1.7",
+    "requirements": ["yrwatertemperatures==1.0.1"],
+    "version": "1.1.8",
     "translations": ["translations/en.json", "translations/nb.json"],
     "loggers": ["custom_components.yr_norwegian_water_temperatures"]
 }

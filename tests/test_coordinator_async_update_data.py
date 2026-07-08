@@ -303,7 +303,8 @@ class TestApiCoordinatorAsyncUpdateData:
         coordinator.config_entry.options = {
             CONF_GET_ALL_LOCATIONS: False,
             CONF_LOCATIONS: "11-17685, 1-46482",  # Only monitor these two locations
-            CONF_ENABLE_CLEANUP: True
+            CONF_ENABLE_CLEANUP: True,
+            CONF_CLEANUP_DAYS: 1000
         }
 
         # Act
