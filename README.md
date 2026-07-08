@@ -1,6 +1,6 @@
 <img src="https://brands.home-assistant.io/_/yr_norwegian_water_temperatures/icon.png" alt="Description" height="70" align="right" />
 
-# YR Norwegian water temperatures
+# Home assistant YR water temperatures integration
 
 
 [![GitHub release](https://img.shields.io/github/release/jornpe/Yr-norwegian-water-temperatures-integration?include_prereleases=&sort=semver&color=blue)](https://github.com/jornpe/Yr-norwegian-water-temperatures-integration/releases/)
@@ -14,11 +14,12 @@
 Must be added as a custom repository.
 
 
-Custom integration for Home Assistant to get Norwegian water temperatures from Yr.no.
-
 ## Overview
 
-This integration provides water temperature data from Norwegian bathing locations via the Yr.no API. It creates sensors for each monitored location showing current water temperature and other relevant information.
+Custom integration for Home Assistant to get Norwegian water temperatures from Yr.no.
+
+
+This integration provides water temperature data from Norwegian bathing locations via the Yr.no API. It creates an entity for each monitored location showing current water temperature and other relevant information.
 
 ## Prerequisites
 
