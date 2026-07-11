@@ -1,7 +1,7 @@
 services:
   homeassistant:
     container_name: hass-test
-    image: homeassistant/home-assistant:stable
+    image: homeassistant/home-assistant:latest
     volumes:
       # Mount the config directory for persistent Home Assistant configuration
       - ./config:/config

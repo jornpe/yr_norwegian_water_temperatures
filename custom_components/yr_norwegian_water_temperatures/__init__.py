@@ -10,10 +10,7 @@ from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, STORAGE_KEY, STORAGE_VERSION
 from .coordinator import ApiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,11 +21,14 @@ PLATFORMS = [Platform.SENSOR]
 @dataclass
 class RuntimeData:
     """Class to hold runtimedata"""
-    coordinator: DataUpdateCoordinator
+    coordinator: ApiCoordinator
     remove_listener: Callable[[], None] | None = None
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+type YrNorwegianWaterTemperaturesConfigEntry = ConfigEntry[RuntimeData]
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: YrNorwegianWaterTemperaturesConfigEntry) -> bool:
     """Set up config entry"""
 
     coordinator = ApiCoordinator(hass, config_entry)
@@ -50,12 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YrNorwegianWaterTemperaturesConfigEntry) -> bool:
     """Unload a config entries"""
-    # Clear data from storage
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    await store.async_save({})
-
     # Remove the coordinator listener
     if entry.runtime_data and entry.runtime_data.remove_listener:
         entry.runtime_data.remove_listener()
@@ -63,7 +59,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return unload_ok
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_listener(hass: HomeAssistant, entry: YrNorwegianWaterTemperaturesConfigEntry) -> None:
     """Handle updates to the config entry."""
     _LOGGER.debug("Config entry updated: %s", entry.data)
     await hass.config_entries.async_reload(entry.entry_id)

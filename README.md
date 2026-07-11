@@ -115,6 +115,7 @@ To modify the integration configuration after setup:
 - **Flexible location monitoring** - monitor all locations or specific ones
 - **Automatic sensor management** with configurable cleanup
 - **Cached data storage** to prevent sensor loss during API outages
+- **Startup from cache** when the Yr API is temporarily unavailable
 - **Configurable update intervals** (minimum 60 seconds)
 - **Case-insensitive location matching** for names and IDs
 
@@ -133,6 +134,8 @@ Each monitored location creates a sensor with:
 2. **No sensors appearing**: Check if your specified locations exist or try enabling "Get all locations"
 3. **Sensors disappearing**: If automatic cleanup is enabled, sensors inactive for the configured period will be removed
 4. **High number of sensors**: If monitoring all locations, enable automatic cleanup to prevent sensor accumulation
+5. **Temporary Yr API errors**: Existing entities continue to use the last cached values during transient API/server errors such as intermittent 404, rate limiting, or connectivity problems
+6. **Invalid API key**: Authentication failures are treated separately from temporary outages and require updating the API key through the integration reconfigure/reauth flow
 
 ### Getting Help
 

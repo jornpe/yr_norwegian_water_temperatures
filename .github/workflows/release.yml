@@ -4,7 +4,8 @@ name: "Release"
 on:
   push:
     paths:
-      - 'custom_components/*/manifest.json'
+      - 'custom_components/**'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -36,6 +37,8 @@ jobs:
     name: "Release"
     runs-on: "ubuntu-latest"
     needs: test
+    environment:
+      name: release
     steps:
       - name: "✏️ Checkout code"
         uses: actions/checkout@v6
@@ -47,61 +50,66 @@ jobs:
         run: |
           VERSION=$(jq -r .version custom_components/*/manifest.json)
           echo "COMPONENT_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "component_version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+
+          if [ "$BRANCH_NAME" = "main" ]; then
+            RELEASE_TAG="v${VERSION}"
+            IS_PRERELEASE=false
+          else
+            BETA_PREFIX="v${VERSION}-beta."
+            HIGHEST_BETA=$(git ls-remote --tags origin "refs/tags/${BETA_PREFIX}*" \
+              | awk -F/ '{print $3}' \
+              | sed -n "s/^${BETA_PREFIX//./\\.}//p" \
+              | grep -E '^[0-9]+$' \
+              | sort -n \
+              | tail -n 1)
+
+            if [ -n "$HIGHEST_BETA" ]; then
+              NEXT_BETA=$((HIGHEST_BETA + 1))
+            else
+              NEXT_BETA=1
+            fi
+
+            RELEASE_TAG="${BETA_PREFIX}${NEXT_BETA}"
+            IS_PRERELEASE=true
+          fi
+
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
 
       - name: "🏷️ Check if tag exists already"
         uses: mukunku/tag-exists-action@v1.7.0
         id: "check_tag"
         with: 
-          tag: "v${{ env.COMPONENT_VERSION }}"
+          tag: "${{ steps.set_var.outputs.release_tag }}"
 
       - name: "❌ Cancel if tag is already present"
         run: |
-          echo "Tag already present: v${{ env.COMPONENT_VERSION }}. Not creating a new release"
+          echo "Tag already present: ${{ steps.set_var.outputs.release_tag }}. Not creating a new release"
           gh run cancel ${{ github.run_id }}
           gh run watch ${{ github.run_id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: steps.check_tag.outputs.exists == 'true'
 
-      - name: "🗝️ Get previous release version"
-        id: last_release
-        uses: InsonusK/get-latest-release@v1.1.0
-        with:
-          myToken: ${{ github.token }}
-          exclude_types: "draft|prerelease"
-
       - name: "🏷️ Create new tag"
         uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
-          tag: "v${{ env.COMPONENT_VERSION }}"
+          tag: "${{ steps.set_var.outputs.release_tag }}"
           tag_exists_error: false
-          message: "Version ${{ env.COMPONENT_VERSION }}"
+          message: "Version ${{ steps.set_var.outputs.component_version }}"
       # if: steps.check_tag.outputs.exists == 'false'
 
-      - name: "🗒️ Generate release changelog"
-        id: changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.4
+      - name: "📦 Create GitHub release"
+        uses: softprops/action-gh-release@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
-          sinceTag: ${{ steps.last_release.outputs.tag_name }}
-          headerLabel: "# Notable changes since ${{ steps.last_release.outputs.tag_name }}"
-          stripGeneratorNotice: true
-
-      - name: 👍 Create Stable release
-        uses: softprops/action-gh-release@v2
-        with:
-          prerelease: false
-          body: "${{ steps.changelog.outputs.changelog }}"
-          name: "Version ${{ env.COMPONENT_VERSION }}"
-          tag_name: "v${{ env.COMPONENT_VERSION }}"
-        if: contains(env.COMPONENT_VERSION, 'beta') == false
-
-      - name: 🤞 Create Beta release
-        uses: softprops/action-gh-release@v2
-        with:
-          prerelease: true
-          body: "${{ steps.changelog.outputs.changelog }}"
-          name: "Version ${{ env.COMPONENT_VERSION }}"
-          tag_name: "v${{ env.COMPONENT_VERSION }}"
-        if: contains(env.COMPONENT_VERSION, 'beta') == true
+          prerelease: ${{ steps.set_var.outputs.is_prerelease == 'true' }}
+          generate_release_notes: true
+          name: "Version ${{ steps.set_var.outputs.component_version }}"
+          tag_name: "${{ steps.set_var.outputs.release_tag }}"

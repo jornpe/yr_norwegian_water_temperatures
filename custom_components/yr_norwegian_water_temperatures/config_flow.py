@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from aiohttp import ClientResponseError
 from homeassistant.config_entries import ConfigFlow, OptionsFlow, ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -28,6 +29,25 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def iter_exception_chain(err: Exception):
+    """Yield an exception and its causes for classification."""
+    current: BaseException | None = err
+    while current is not None:
+        yield current
+        current = current.__cause__ or current.__context__
+
+
+def is_auth_failure(err: Exception) -> bool:
+    """Return True if the exception indicates invalid credentials."""
+    for current in iter_exception_chain(err):
+        if isinstance(current, PermissionError):
+            return True
+        if isinstance(current, ClientResponseError) and current.status in {401, 403}:
+            return True
+
+    return False
 
 
 def get_options_data_schema(config_entry: ConfigEntry | None) -> vol.Schema:
@@ -104,6 +124,10 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow handler."""
         return YrWaterTemperaturesOptionsFlow(config_entry)
 
+    async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+        """Handle reauthentication by reusing the reconfigure flow."""
+        return await self.async_step_reconfigure(user_input)
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle the initial step."""
         errors = {}
@@ -148,9 +172,13 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
         """Handle reconfiguration of the integration."""
         errors = {}
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        entry_id = self.context.get("entry_id")
+        if entry_id is None:
+            return self.async_abort(reason="missing_config_entry")
+
+        config_entry = self.hass.config_entries.async_get_entry(entry_id)
+        if config_entry is None:
+            return self.async_abort(reason="missing_config_entry")
 
         if user_input is not None:
             _LOGGER.info(f"Reconfiguring {DOMAIN} with user input: {user_input}")
@@ -201,6 +229,9 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
         except PermissionError:
             raise InvalidAuth("Invalid API key")
         except Exception as e:
+            if is_auth_failure(e):
+                raise InvalidAuth("Invalid API key") from e
+
             _LOGGER.exception("Error connecting to Yr API")
             raise CannotConnect("Cannot connect to Yr API")
 
