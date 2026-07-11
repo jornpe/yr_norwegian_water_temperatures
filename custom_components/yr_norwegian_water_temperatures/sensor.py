@@ -6,23 +6,29 @@ from decimal import Decimal
 from typing import Mapping, Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
-from homeassistant.util import dt
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from yrwatertemperatures import WaterTemperatureData
 
-from custom_components.yr_norwegian_water_temperatures import RuntimeData
+from custom_components.yr_norwegian_water_temperatures import (
+    RuntimeData,
+    YrNorwegianWaterTemperaturesConfigEntry,
+)
+from custom_components.yr_norwegian_water_temperatures.coordinator import ApiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: YrNorwegianWaterTemperaturesConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the sensor platform for Yr Norwegian Water Temperatures."""
 
     coordinator = config_entry.runtime_data.coordinator
@@ -77,12 +83,34 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
     """Representation of a water temperature sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, data: WaterTemperatureData):
+    def __init__(self, coordinator: ApiCoordinator, data: WaterTemperatureData):
         """Initialize the water temperature sensor."""
         super().__init__(coordinator)
-        self.data = data
+        self._data = data
         self._attr_unique_id = data.location_id
-        self._temperature = data.temperature
+        self._attr_native_value = data.temperature
+
+    def _update_from_data(self, data: WaterTemperatureData) -> None:
+        """Update the sensor from new coordinator data."""
+        self._data = data
+        self._attr_native_value = data.temperature
+
+    def _get_coordinator_data(self) -> WaterTemperatureData | None:
+        """Return this sensor's data from the coordinator if present."""
+        return next(
+            (
+                data for data in self.coordinator.data or []
+                if isinstance(data, WaterTemperatureData) and data.location_id == self._attr_unique_id
+            ),
+            None
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if data := self._get_coordinator_data():
+            self._update_from_data(data)
+        self.async_write_ha_state()
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
@@ -92,15 +120,12 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self.data.name
+        return self._data.name
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        """Update the state of the sensor with the latest valid temperature and return it."""
-        sensor = next((s for s in self.coordinator.data if s.location_id == self.data.location_id), None)
-
-        self._temperature = sensor.temperature if sensor and sensor.temperature else self._temperature
-        return self._temperature
+        """Return the latest known temperature."""
+        return self._attr_native_value
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -120,16 +145,13 @@ class WaterTemperatureSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the sensor."""
-        new_data = next((s for s in self.coordinator.data if s.location_id == self.data.location_id), None)
-        if new_data:
-            self.data = new_data
         return {
-            "location_id": self.data.location_id,
-            "latitude": self.data.latitude,
-            "longitude": self.data.longitude,
-            "elevation": self.data.elevation,
-            "county": self.data.county,
-            "municipality": self.data.municipality,
-            "source": self.data.source,
-            "time": self.data.time.isoformat()
+            "location_id": self._data.location_id,
+            "latitude": self._data.latitude,
+            "longitude": self._data.longitude,
+            "elevation": self._data.elevation,
+            "county": self._data.county,
+            "municipality": self._data.municipality,
+            "source": self._data.source,
+            "time": self._data.time.isoformat() if self._data.time else None
         }
