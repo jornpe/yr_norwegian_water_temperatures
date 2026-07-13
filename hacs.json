@@ -1,7 +1,7 @@
 {
-    "name": "Yr Norwegian Water Temperatures",
     "content_in_root": false,
-    "render_readme": true,
     "country": "NO",
-    "homeassistant": "2026.3.0"
+    "homeassistant": "2026.3.0",
+    "name": "Yr Norwegian Water Temperatures",
+    "render_readme": true
 }
