@@ -30,6 +30,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DESCRIPTION_PLACEHOLDERS = {
+    "api_key_url": "https://badetemperaturer.yr.no",
+    "locations_url": "https://www.yr.no/nb/badetemperaturer",
+}
+
 
 def iter_exception_chain(err: Exception):
     """Yield an exception and its causes for classification."""
@@ -166,7 +171,8 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=combined_schema,
-            errors=errors
+            errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
@@ -215,7 +221,8 @@ class YrWaterTemperaturesConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=combined_schema,
-            errors=errors
+            errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
 
@@ -254,7 +261,8 @@ class YrWaterTemperaturesOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=get_options_data_schema(self._config_entry)
+            data_schema=get_options_data_schema(self._config_entry),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
 

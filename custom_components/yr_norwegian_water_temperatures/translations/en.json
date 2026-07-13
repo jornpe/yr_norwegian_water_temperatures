@@ -1,6 +1,6 @@
 {
+  "title": "Yr Norwegian Water Temperatures",
   "config": {
-    "title": "Yr Norwegian Water Temperatures",
     "abort": {
       "already_configured": "Integration is already configured",
       "reconfigure_successful": "Reconfiguration successful"
@@ -12,7 +12,7 @@
     },
     "step": {
       "user": {
-        "description": "Configure the YR Norwegian Water Temperatures integration.\n\nGet your API key from https://badetemperaturer.yr.no\n\nYou can monitor all locations or specify particular ones. If monitoring all locations, automatic cleanup is recommended to prevent accumulating hundreds of inactive sensors.",
+        "description": "Configure the YR Norwegian Water Temperatures integration.\n\nGet your API key from [badetemperaturer.yr.no]({api_key_url})\n\nYou can monitor all locations or specify particular ones. If monitoring all locations, automatic cleanup is recommended to prevent accumulating hundreds of inactive sensors.",
         "data": {
           "api_key": "API Key",
           "scan_interval": "Update interval (seconds)",
@@ -23,7 +23,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 seconds",
-          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "locations": "Find locations at [yr.no bathing temperatures]({locations_url})",
           "cleanup_days": "Minimum 1 day"
         }
       },
@@ -39,7 +39,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 seconds",
-          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "locations": "Find locations at [yr.no bathing temperatures]({locations_url})",
           "cleanup_days": "Minimum 1 day"
         }
       }
@@ -58,7 +58,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 seconds",
-          "locations": "Find locations at https://www.yr.no/nb/badetemperaturer",
+          "locations": "Find locations at [yr.no bathing temperatures]({locations_url})",
           "cleanup_days": "Minimum 1 day"
         }
       }
