@@ -1,6 +1,6 @@
 {
+  "title": "Yr bade temperaturer",
   "config": {
-    "title": "Yr bade temperaturer",
     "abort": {
       "already_configured": "Integration er allerede konfigurert",
       "reconfigure_successful": "Rekonfigurering vellykket"
@@ -12,7 +12,7 @@
     },
     "step": {
       "user": {
-        "description": "Konfigurer YR badetemperatur integrasjonen.\n\nFå din API-nøkkel fra https://badetemperaturer.yr.no\n\nDu kan overvåke alle steder eller spesifisere bestemte. Hvis du overvåker alle steder, anbefales automatisk opprydding for å unngå akkumulering av hundrevis av inaktive sensorer.",
+        "description": "Konfigurer YR badetemperatur integrasjonen.\n\nFå din API-nøkkel fra [badetemperaturer.yr.no]({api_key_url})\n\nDu kan overvåke alle steder eller spesifisere bestemte. Hvis du overvåker alle steder, anbefales automatisk opprydding for å unngå akkumulering av hundrevis av inaktive sensorer.",
         "data": {
           "api_key": "API-nøkkel",
           "scan_interval": "Oppdateringsintervall (sekunder)",
@@ -23,7 +23,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 sekunder",
-          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "locations": "Finn steder på [yr.no badetemperaturer]({locations_url})",
           "cleanup_days": "Minimum 1 dag"
         }
       },
@@ -39,7 +39,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 sekunder",
-          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "locations": "Finn steder på [yr.no badetemperaturer]({locations_url})",
           "cleanup_days": "Minimum 1 dag"
         }
       }
@@ -58,7 +58,7 @@
         },
         "data_description": {
           "scan_interval": "Minimum 60 sekunder",
-          "locations": "Finn steder på https://www.yr.no/nb/badetemperaturer",
+          "locations": "Finn steder på [yr.no badetemperaturer]({locations_url})",
           "cleanup_days": "Minimum 1 dag"
         }
       }
